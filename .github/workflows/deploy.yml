@@ -48,6 +48,9 @@ jobs:
           role-to-assume: arn:aws:iam::980921712180:role/WebConsole
           aws-region: ${{ secrets.AWS_REGION }}
           
+      - name: Who am I?
+        run: aws sts get-caller-identity
+            
       - name: Ensure S3 Bucket and Folder Structure
         run: |
           echo "🔍 Checking if bucket '$BUCKET_NAME' exists..."
@@ -105,6 +108,9 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::980921712180:role/WebConsole
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Who am I?
+        run: aws sts get-caller-identity
         
       - name: Install Deployment Dependencies
         run: |
