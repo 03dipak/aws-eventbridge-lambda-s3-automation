@@ -42,13 +42,12 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
+          role-to-assume: arn:aws:iam::980921712180:role/WebConsole
+          aws-region: $REGION
+          
       - name: Ensure S3 Bucket and Folder Structure
         run: |
           echo "🔍 Checking if bucket '$BUCKET_NAME' exists..."
@@ -101,12 +100,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }} 
+          role-to-assume: arn:aws:iam::980921712180:role/WebConsole
+          aws-region: $REGION
         
       - name: Install Deployment Dependencies
         run: |
