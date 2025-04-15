@@ -69,6 +69,15 @@ jobs:
             --key "restricted-folder/data/"
           echo "✅ Folder 'restricted-folder/data/' "
 
+      - name: Install Dependencies for ${{ matrix.lambda }}
+        working-directory: lambdas/${{ matrix.lambda }}
+        run: |
+          pip install -r ../../requirements.txt -t .  
+        
+      - name: Install Deployment Dependencies
+        run: |
+          pip install boto3
+      
       - name: Deploy Lambda Function ${{ matrix.lambda }}
         working-directory: lambdas/${{ matrix.lambda }}
         run: |
