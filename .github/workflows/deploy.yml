@@ -1,6 +1,7 @@
+---
 name: Deploy AWS Infrastructure
 
-on:
+"on":
   push:
     branches:
       - main
@@ -54,14 +55,17 @@ jobs:
             aws s3api create-bucket \
               --bucket "$BUCKET_NAME" \
               --region "$REGION" \
-              --create-bucket-configuration LocationConstraint="$REGION"
+              --create-bucket-configuration \
+              LocationConstraint="$REGION"
           fi
+
           echo "📁 Ensuring 'restricted-folder/data/' path exists in S3..."
           aws s3api put-object \
-              --bucket "$BUCKET_NAME" \
-              --key "restricted-folder/data/"
-          echo "✅ Folder 'restricted-folder/data/' created (if not already present)."
-      
+            --bucket "$BUCKET_NAME" \
+            --key "restricted-folder/data/"
+          echo "✅ Folder 'restricted-folder/data/' \
+          created (if not already present)."
+
       - name: Install Lambda Dependencies for ${{ matrix.lambda }}
         working-directory: lambdas/${{ matrix.lambda }}
         run: |
@@ -70,7 +74,8 @@ jobs:
       - name: Deploy Lambda Function ${{ matrix.lambda }}
         working-directory: lambdas/${{ matrix.lambda }}
         run: |
-          python ../../scripts/deploy_lambda.py ${{ matrix.lambda }} . $ROLE_ARN $REGION $ENV_NAME
+          python ../../scripts/deploy_lambda.py \
+            ${{ matrix.lambda }} . $ROLE_ARN $REGION $ENV_NAME
 
   deploy-eventbridge:
     runs-on: ubuntu-latest
@@ -81,4 +86,5 @@ jobs:
 
       - name: Deploy EventBridge Rule
         run: |
-          python scripts/deploy_eventbridge.py $REGION $ENV_NAME $BUCKET_NAME
+          python scripts/deploy_eventbridge.py \
+            $REGION $ENV_NAME $BUCKET_NAME
