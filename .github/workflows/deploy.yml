@@ -46,7 +46,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::980921712180:role/WebConsole
-          aws-region: "$REGION"
+          aws-region: ${{ secrets.AWS_REGION }}
           
       - name: Ensure S3 Bucket and Folder Structure
         run: |
@@ -81,7 +81,7 @@ jobs:
         working-directory: lambdas/${{ matrix.lambda }}
         run: |
           python ../../scripts/deploy_lambda.py \
-            ${{ matrix.lambda }} . $ROLE_ARN $REGION
+            ${{ matrix.lambda }} . ${{ secrets.ROLE_ARN }} ${{ secrets.AWS_REGION }}
 
   deploy-eventbridge:
     runs-on: ubuntu-latest
@@ -104,7 +104,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::980921712180:role/WebConsole
-          aws-region: "$REGION"
+          aws-region: ${{ secrets.AWS_REGION }}
         
       - name: Install Deployment Dependencies
         run: |
@@ -113,4 +113,4 @@ jobs:
       - name: Deploy EventBridge Rule
         run: |
           python scripts/deploy_eventbridge.py \
-            $REGION $ENV_NAME $BUCKET_NAME
+            ${{ secrets.AWS_REGION }} $ENV_NAME ${{ secrets.GLUE_BUCKET }}
