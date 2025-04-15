@@ -46,7 +46,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::980921712180:role/WebConsole
-          aws-region: $REGION
+          aws-region: "$REGION"
           
       - name: Ensure S3 Bucket and Folder Structure
         run: |
@@ -104,7 +104,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::980921712180:role/WebConsole
-          aws-region: $REGION
+          aws-region: "$REGION"
         
       - name: Install Deployment Dependencies
         run: |
