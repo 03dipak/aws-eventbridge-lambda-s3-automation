@@ -46,11 +46,11 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::980921712180:role/WebConsole
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ap-south-1
           
       - name: Who am I?
         run: aws sts get-caller-identity
-            
+
       - name: Ensure S3 Bucket and Folder Structure
         run: |
           echo "🔍 Checking if bucket '$BUCKET_NAME' exists..."
