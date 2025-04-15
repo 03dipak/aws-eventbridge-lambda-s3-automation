@@ -1,0 +1,24 @@
+repo-root/
+├── lambdas/
+│   ├── lambda1/
+│   │   ├── lambda_function.py
+│   │   └── requirements.txt
+│   ├── lambda2/
+│   │   ├── lambda_function.py
+│   │   └── requirements.txt
+│   └── ...
+├── eventbridge/
+│   ├── rules/
+│   │   ├── rule1.json
+│   │   └── rule2.json
+│   ├── targets/
+│   │   ├── rule1_targets.json
+│   │   └── rule2_targets.json
+├── scripts/
+│   ├── deploy_lambda.py
+│   ├── deploy_eventbridge.py
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+├── requirements.txt
+└── README.md
