@@ -1,52 +1,49 @@
-import boto3, zipfile, os, sys
-from botocore.exceptions import ClientError
+import boto3
+import zipfile
+import os
+import sys
 
-def zip_lambda(source_dir, zip_path):
-    """Create a zip file from the source directory."""
+def zip_lambda(lambda_path, zip_path):
     with zipfile.ZipFile(zip_path, 'w') as zipf:
-        for root, dirs, files in os.walk(source_dir):
+        for root, dirs, files in os.walk(lambda_path):
             for file in files:
-                path = os.path.join(root, file)
-                zipf.write(path, os.path.relpath(path, source_dir))
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, lambda_path)
+                zipf.write(file_path, arcname)
 
-def deploy_lambda(lambda_name, source_dir, role_arn, region):
-    """Deploy or update a Lambda function."""
+def deploy_lambda(lambda_name, lambda_path, role_arn, region, runtime="python3.10", handler="lambda_function.lambda_handler"):
     zip_path = f"/tmp/{lambda_name}.zip"
-    zip_lambda(source_dir, zip_path)
-    
-    # Initialize the Lambda client
-    client = boto3.client("lambda", region_name=region)
+    zip_lambda(lambda_path, zip_path)
 
-    with open(zip_path, "rb") as f:
+    client = boto3.client('lambda', region_name=region)
+    with open(zip_path, 'rb') as f:
         zipped_code = f.read()
 
-    # Try to get the function and update or create it
     try:
-        # Check if the Lambda function already exists
         client.get_function(FunctionName=lambda_name)
-        # Update the existing Lambda function
-        client.update_function_code(FunctionName=lambda_name, ZipFile=zipped_code)
-        print(f"✅ Updated {lambda_name}")
+        print(f"Updating Lambda: {lambda_name}")
+        response = client.update_function_code(
+            FunctionName=lambda_name,
+            ZipFile=zipped_code,
+            Publish=True
+        )
     except client.exceptions.ResourceNotFoundException:
-        # If the function doesn't exist, create a new one
-        try:
-            client.create_function(
-                FunctionName=lambda_name,
-                Runtime="python3.10",  # Lambda runtime version
-                Role=role_arn,  # Ensure this role ARN is correctly formatted
-                Handler="lambda_function.lambda_handler",  # Entry point of the Lambda
-                Code={'ZipFile': zipped_code},
-                Timeout=30  # Timeout for the function
-            )
-            print(f"✅ Created {lambda_name}")
-        except ClientError as e:
-            print(f"❌ Error creating function {lambda_name}: {e}")
-            raise
+        print(f"Creating Lambda: {lambda_name}")
+        response = client.create_function(
+            FunctionName=lambda_name,
+            Runtime=runtime,
+            Role=role_arn,
+            Handler=handler,
+            Code={'ZipFile': zipped_code},
+            Timeout=30,
+            Publish=True
+        )
+
+    print(response)
 
 if __name__ == "__main__":
-    # Ensure correct number of arguments
-    if len(sys.argv) != 5:
-        print("Usage: python deploy_lambda.py <lambda_name> <source_dir> <role_arn> <region>")
-        sys.exit(1)
-
-    deploy_lambda(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    lambda_name = sys.argv[1]
+    lambda_path = sys.argv[2]
+    role_arn = sys.argv[3]
+    region = sys.argv[4]
+    deploy_lambda(lambda_name, lambda_path, role_arn, region)
