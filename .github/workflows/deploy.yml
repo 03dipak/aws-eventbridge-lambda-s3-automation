@@ -1,36 +1,9 @@
----
 name: Deploy AWS Infrastructure
 
-"on":
+on:
   push:
     branches:
       - main
-
-env: &global-env
-  REGION: ${{ secrets.AWS_REGION }}
-  ROLE_ARN: ${{ secrets.ROLE_ARN }}
-  BUCKET_NAME: ${{ secrets.GLUE_BUCKET }}
-  ENV_NAME: main
-
-defaults: &defaults
-  run:
-    shell: bash
-
-steps-common: &steps-common
-  - name: Checkout Repo
-    uses: actions/checkout@v3
-
-  - name: Set up Python
-    uses: actions/setup-python@v4
-    with:
-      python-version: '3.10'
-
-  - name: Configure AWS Credentials
-    uses: aws-actions/configure-aws-credentials@v2
-    with:
-      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      aws-region: ${{ secrets.AWS_REGION }}
 
 jobs:
   lint:
@@ -55,9 +28,26 @@ jobs:
     strategy:
       matrix:
         lambda: [demo-lambda-getfile-dev, demo-lambda-hello-dev]
-    env: *global-env
+    env:
+      REGION: ${{ secrets.AWS_REGION }}
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
+      BUCKET_NAME: ${{ secrets.GLUE_BUCKET }}
+      ENV_NAME: main
     steps:
-      - <<: *steps-common
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Ensure S3 Bucket and Folder Structure
         run: |
@@ -77,8 +67,7 @@ jobs:
           aws s3api put-object \
             --bucket "$BUCKET_NAME" \
             --key "restricted-folder/data/"
-          echo "✅ Folder 'restricted-folder/data/' \
-          created (if not already present)."
+          echo "✅ Folder 'restricted-folder/data/' "
 
       - name: Install Lambda Dependencies for ${{ matrix.lambda }}
         working-directory: lambdas/${{ matrix.lambda }}
@@ -94,9 +83,26 @@ jobs:
   deploy-eventbridge:
     runs-on: ubuntu-latest
     needs: deploy-lambdas
-    env: *global-env
+    env:
+      REGION: ${{ secrets.AWS_REGION }}
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
+      BUCKET_NAME: ${{ secrets.GLUE_BUCKET }}
+      ENV_NAME: main
     steps:
-      - <<: *steps-common
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Deploy EventBridge Rule
         run: |
