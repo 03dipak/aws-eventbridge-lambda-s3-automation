@@ -33,6 +33,20 @@ steps-common: &steps-common
       aws-region: ${{ secrets.AWS_REGION }}
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Install yamllint
+        run: |
+          pip install yamllint
+
+      - name: Lint YAML files
+        run: |
+          yamllint .github/workflows --format=parsable
+
   deploy-lambdas:
     runs-on: ubuntu-latest
     permissions:
