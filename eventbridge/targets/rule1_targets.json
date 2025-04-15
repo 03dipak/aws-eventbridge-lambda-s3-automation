@@ -1,0 +1,6 @@
+[
+  {
+    "Id": "ProcessS3UploadsLambda",
+    "function": "processS3Uploads"
+  }
+]

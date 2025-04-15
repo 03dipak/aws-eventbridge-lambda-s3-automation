@@ -1,0 +1,84 @@
+name: Deploy AWS Infrastructure
+
+on:
+  push:
+    branches:
+      - main
+
+env: &global-env
+  REGION: ${{ secrets.AWS_REGION }}
+  ROLE_ARN: ${{ secrets.ROLE_ARN }}
+  BUCKET_NAME: ${{ secrets.GLUE_BUCKET }}
+  ENV_NAME: main
+
+defaults: &defaults
+  run:
+    shell: bash
+
+steps-common: &steps-common
+  - name: Checkout Repo
+    uses: actions/checkout@v3
+
+  - name: Set up Python
+    uses: actions/setup-python@v4
+    with:
+      python-version: '3.10'
+
+  - name: Configure AWS Credentials
+    uses: aws-actions/configure-aws-credentials@v2
+    with:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws-region: ${{ secrets.AWS_REGION }}
+
+jobs:
+  deploy-lambdas:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        lambda: [demo-lambda-getfile-dev, demo-lambda-hello-dev]
+    env: *global-env
+    steps:
+      - <<: *steps-common
+
+      - name: Ensure S3 Bucket and Folder Structure
+        run: |
+          echo "🔍 Checking if bucket '$BUCKET_NAME' exists..."
+          if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+            echo "✅ Bucket exists: $BUCKET_NAME"
+          else
+            echo "🚀 Creating bucket: $BUCKET_NAME"
+            aws s3api create-bucket \
+              --bucket "$BUCKET_NAME" \
+              --region "$REGION" \
+              --create-bucket-configuration LocationConstraint="$REGION"
+          fi
+          echo "📁 Ensuring 'restricted-folder/data/' path exists in S3..."
+          aws s3api put-object \
+              --bucket "$BUCKET_NAME" \
+              --key "restricted-folder/data/"
+          echo "✅ Folder 'restricted-folder/data/' created (if not already present)."
+      
+      - name: Install Lambda Dependencies for ${{ matrix.lambda }}
+        working-directory: lambdas/${{ matrix.lambda }}
+        run: |
+          pip install -r requirements.txt -t .
+
+      - name: Deploy Lambda Function ${{ matrix.lambda }}
+        working-directory: lambdas/${{ matrix.lambda }}
+        run: |
+          python ../../scripts/deploy_lambda.py ${{ matrix.lambda }} . $ROLE_ARN $REGION $ENV_NAME
+
+  deploy-eventbridge:
+    runs-on: ubuntu-latest
+    needs: deploy-lambdas
+    env: *global-env
+    steps:
+      - <<: *steps-common
+
+      - name: Deploy EventBridge Rule
+        run: |
+          python scripts/deploy_eventbridge.py $REGION $ENV_NAME $BUCKET_NAME
