@@ -89,7 +89,7 @@ jobs:
         working-directory: lambdas/${{ matrix.lambda }}
         run: |
           python ../../scripts/deploy_lambda.py \
-            ${{ matrix.lambda }} . $ROLE_ARN $REGION $ENV_NAME
+            ${{ matrix.lambda }} . $ROLE_ARN $REGION
 
   deploy-eventbridge:
     runs-on: ubuntu-latest
